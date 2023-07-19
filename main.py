@@ -13,23 +13,23 @@ cv = cv2
 data = {
     'burger1': {
         'color': (0, 0, 255),
-        'threshold': 0.97
+        'threshold': 0.99
     },
     'burger2': {
         'color': (0, 165, 255),
-        'threshold': 0.983
+        'threshold': 0.99
     },
     'burger3': {
         'color': (0, 255, 255),
-        'threshold': 0.86
+        'threshold': 0.99
     },
     'fries': {
         'color': (0, 255, 0),
-        'threshold': 0.95
+        'threshold': 0.99
     },
     'drink': {
         'color': (255, 0, 0),
-        'threshold': 0.88
+        'threshold': 0.99
     }
 }
 
@@ -41,11 +41,27 @@ positions = {
     'drink': (0, 0)
 }
 
+def get_image_select_prompt(name):
+    print(name)
+    input("Move Top Left and press enter")
+    start_pos = pyautogui.position()
+    input("Move Bottom Right and press enter")
+    end_pos = pyautogui.position()
+    return np.array(pyautogui.screenshot(region=(start_pos.x, start_pos.y, end_pos.x - start_pos.x, end_pos.y - start_pos.y)))[:, :, ::-1]
+
+
+images = {
+    'burger1': get_image_select_prompt('Find an order with a hamburger (burger1)'),
+    'burger2': get_image_select_prompt('Find an order with a double burger (burger2)'),
+    'burger3': get_image_select_prompt('Find an order with a deluxe burger (burger3)'),
+    'fries': get_image_select_prompt('Find an order with fries'),
+    'drink': get_image_select_prompt('Find an order with a drink')
+}
 
 def get_order(screen):
     orderData = copy.deepcopy(data)
     for i in orderData:
-        template = cv.imread(f'detections/orders/{i}.png')
+        template = images[i]
         result = cv.matchTemplate(screen, template, cv.TM_CCORR_NORMED)
         imageInfo = cv.minMaxLoc(result)
 
@@ -72,6 +88,7 @@ def get_order(screen):
     return orderData, order
 
 
+
 # SETUP
 input("Hover Classic Burger (burger1) icon and press enter")
 positions["burger1"] = pyautogui.position()
@@ -91,6 +108,8 @@ start_selection = pyautogui.position()
 input("Hover end (bottom right) of order pane and press enter")
 end_selection = pyautogui.position()
 
+
+
 running = True
 
 
@@ -104,8 +123,9 @@ listener = Listener(on_press=on_press)
 listener.start()
 
 while running:
-    os.system("cls")
     if pyautogui.pixel(start_selection.x, start_selection.y) != (255, 255, 255):
+        time.sleep(1)
+        autoit.press("enter")
         continue
 
     print(Fore.RED+"Order Detected:")
@@ -114,7 +134,7 @@ while running:
     print(order)
     for item in order[1]:
         print("    - " + item.replace("burger1", "Hamburger").replace("burger2", "Double Burger").replace("burger3", "Deluxe Burger").replace("fries", "Bloxy Fries").replace("drink", "Bloxy Cola"))
-
+    time.sleep(0.5)
     for item in order[1]:
         autoit.move(*positions[item])
         autoit.move(positions[item][0]+1, positions[item][1]+1)
@@ -124,9 +144,11 @@ while running:
     autoit.move(*done)
     autoit.move(done.x+1,done.y+1)
     autoit.click()
+
     print(Fore.GREEN+"Completed!")
     while pyautogui.pixel(start_selection.x, start_selection.y) != (255, 255, 255) and running:
-        pass
+        time.sleep(1)
+        autoit.press("enter")
     time.sleep(2.5)
 
 listener.stop()
