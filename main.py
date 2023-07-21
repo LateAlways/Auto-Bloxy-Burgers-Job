@@ -68,9 +68,9 @@ images = {
     'drink': None
 }
 
-
+done = []
 def images_set():
-    return None not in list(images.values())
+    return len(done) == 5
 
 
 while not images_set():
@@ -83,6 +83,7 @@ while not images_set():
     choice = int(choice)
     choice_dict = list(images.keys())[choice - 1]
     images[choice_dict] = get_image_select_prompt(prompts[choice_dict])
+    done.append(choice_dict)
 
 
 def get_order(screen):
