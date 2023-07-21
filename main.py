@@ -8,6 +8,7 @@ import time
 import ait as autoit
 from pynput.keyboard import Key, Listener
 from colorama import init, Fore
+
 init()
 cv = cv2
 data = {
@@ -41,6 +42,7 @@ positions = {
     'drink': (0, 0)
 }
 
+
 def get_image_select_prompt(name):
     print(name)
     input("Move Top Left and press enter")
@@ -50,13 +52,38 @@ def get_image_select_prompt(name):
     return np.array(pyautogui.screenshot(region=(start_pos.x, start_pos.y, end_pos.x - start_pos.x, end_pos.y - start_pos.y)))[:, :, ::-1]
 
 
-images = {
-    'burger1': get_image_select_prompt('Find an order with a hamburger (burger1)'),
-    'burger2': get_image_select_prompt('Find an order with a double burger (burger2)'),
-    'burger3': get_image_select_prompt('Find an order with a deluxe burger (burger3)'),
-    'fries': get_image_select_prompt('Find an order with fries'),
-    'drink': get_image_select_prompt('Find an order with a drink')
+prompts = {
+    "burger1": "Find an order with a Classic Burger (burger1)",
+    "burger2": "Find an order with a double burger (burger2)",
+    "burger3": "Find an order with a deluxe burger (burger3)",
+    "fries": "Find an order with fries",
+    "drink": "Find an order with a drink"
 }
+
+images = {
+    'burger1': None,
+    'burger2': None,
+    'burger3': None,
+    'fries': None,
+    'drink': None
+}
+
+
+def images_set():
+    return None not in list(images.values())
+
+
+while not images_set():
+    print("Todo: ")
+    for i, image in enumerate(list(images.keys())):
+        if images[image] is None:
+            print("  " + str(i + 1) + ". " + image)
+
+    choice = input("Pick: ")
+    choice = int(choice)
+    choice_dict = list(images.keys())[choice - 1]
+    images[choice_dict] = get_image_select_prompt(prompts[choice_dict])
+
 
 def get_order(screen):
     orderData = copy.deepcopy(data)
@@ -88,7 +115,6 @@ def get_order(screen):
     return orderData, order
 
 
-
 # SETUP
 input("Hover Classic Burger (burger1) icon and press enter")
 positions["burger1"] = pyautogui.position()
@@ -108,8 +134,6 @@ start_selection = pyautogui.position()
 input("Hover end (bottom right) of order pane and press enter")
 end_selection = pyautogui.position()
 
-
-
 running = True
 
 
@@ -125,10 +149,10 @@ listener.start()
 while running:
     if pyautogui.pixel(start_selection.x, start_selection.y) != (255, 255, 255):
         time.sleep(1)
-        autoit.press("enter")
+        # autoit.press("enter")
         continue
 
-    print(Fore.RED+"Order Detected:")
+    print(Fore.RED + "Order Detected:")
     screenshot = np.array(pyautogui.screenshot(region=(start_selection.x, start_selection.y, end_selection.x - start_selection.x, end_selection.y - start_selection.y)))[:, :, ::-1]
     order = get_order(screenshot)
     print(order)
@@ -137,18 +161,18 @@ while running:
     time.sleep(0.5)
     for item in order[1]:
         autoit.move(*positions[item])
-        autoit.move(positions[item][0]+1, positions[item][1]+1)
+        autoit.move(positions[item][0] + 1, positions[item][1] + 1)
         autoit.click()
         time.sleep(0.05)
 
     autoit.move(*done)
-    autoit.move(done.x+1,done.y+1)
+    autoit.move(done.x + 1, done.y + 1)
     autoit.click()
 
-    print(Fore.GREEN+"Completed!")
+    print(Fore.GREEN + "Completed!")
     while pyautogui.pixel(start_selection.x, start_selection.y) != (255, 255, 255) and running:
         time.sleep(1)
-        autoit.press("enter")
+        # autoit.press("enter")
     time.sleep(2.5)
 
 listener.stop()
